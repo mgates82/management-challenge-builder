@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Management Challenge Builder</title>
+<style>
+  :root {
+    --navy: #1a3a5c;
+    --blue: #2563a8;
+    --blue-light: #e8f0fa;
+    --orange: #d4622a;
+    --orange-light: #fdf0ea;
+    --green: #1e7e4e;
+    --green-light: #e8f5ee;
+    --border: #dde3ec;
+    --text: #1e2a3a;
+    --muted: #6b7a90;
+    --bg: #f5f7fb;
+    --white: #ffffff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); }
+
+  /* ── Input Screen ── */
+  .input-screen {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  .logo-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 36px;
+  }
+  .logo-mark {
+    width: 42px; height: 42px;
+    background: var(--navy);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .logo-text h1 { font-size: 1.15rem; font-weight: 700; color: var(--navy); }
+  .logo-text p { font-size: 0.8rem; color: var(--muted); }
+
+  .input-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 36px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+
+  .input-card h2 { font-size: 1.3rem; color: var(--navy); margin-bottom: 6px; }
+  .input-card > p { font-size: 0.88rem; color: var(--muted); margin-bottom: 28px; line-height: 1.6; }
+
+  .field { margin-bottom: 22px; }
+  .field label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--navy);
+    margin-bottom: 8px;
+  }
+  .field .field-hint {
+    font-size: 0.8rem;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--muted);
+    margin-left: 6px;
+  }
+  .field input, .field textarea {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    color: var(--text);
+    background: white;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    resize: vertical;
+    line-height: 1.5;
+  }
+  .field textarea { min-height: 100px; }
+  .field input:focus, .field textarea:focus {
+    outline: none;
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(37, 99, 168, 0.1);
+  }
+
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  .generate-btn {
+    width: 100%;
+    background: var(--navy);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 15px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background 0.2s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .generate-btn:hover { background: var(--blue); transform: translateY(-1px); }
+  .generate-btn:active { transform: translateY(0); }
+  .generate-btn:disabled { background: #94a3b8; cursor: not-allowed; transform: none; }
+
+  /* ── Loading state ── */
+  .loading-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 20px 0;
+    overflow: hidden;
+    display: none;
+  }
+  .loading-bar.active { display: block; }
+  .loading-fill {
+    height: 100%;
+    background: var(--blue);
+    border-radius: 2px;
+    width: 0%;
+    transition: width 0.6s ease;
+  }
+
+  /* ── Output Plan ── */
+  .output-screen { display: none; }
+  .output-screen.visible { display: block; }
+
+  .output-top {
+    background: var(--navy);
+    padding: 28px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .output-top-left h2 { color: white; font-size: 1.2rem; margin-bottom: 4px; }
+  .output-top-left p { color: rgba(255,255,255,0.65); font-size: 0.85rem; }
+  .output-actions { display: flex; gap: 10px; }
+  .btn-outline-white {
+    background: transparent;
+    color: white;
+    border: 1.5px solid rgba(255,255,255,0.5);
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-outline-white:hover { background: rgba(255,255,255,0.15); }
+  .btn-white {
+    background: white;
+    color: var(--navy);
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .plan-body {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  /* ── Plan Sections ── */
+  .plan-section { margin-bottom: 32px; }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .section-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .section-header h3 {
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .section-header .section-sub {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* Section: Expectation */
+  .section-expectation .section-icon { background: var(--blue-light); }
+  .section-expectation h3 { color: var(--blue); }
+
+  /* Section: Monitoring */
+  .section-monitoring .section-icon { background: var(--green-light); }
+  .section-monitoring h3 { color: var(--green); }
+
+  /* Section: Conversation */
+  .section-conversation .section-icon { background: var(--orange-light); }
+  .section-conversation h3 { color: var(--orange); }
+
+  /* Expectation box */
+  .expectation-statement {
+    background: white;
+    border: 1.5px solid var(--border);
+    border-top: 4px solid var(--blue);
+    border-radius: 12px;
+    padding: 24px;
+    font-size: 1rem;
+    line-height: 1.75;
+    color: var(--text);
+  }
+  .exp-label {
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .exp-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 20px;
+  }
+  .exp-cell {
+    background: var(--blue-light);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .exp-cell .tag {
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--blue);
+    margin-bottom: 6px;
+  }
+  .exp-cell p { font-size: 0.88rem; line-height: 1.55; color: var(--text); }
+
+  /* Monitoring */
+  .monitor-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .monitor-card {
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .monitor-card-header {
+    background: var(--green);
+    color: white;
+    padding: 10px 16px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .monitor-card-header.doc { background: #2d7aa0; }
+  .monitor-card-header.align { background: #5b3ea0; }
+  .monitor-card-body {
+    padding: 16px;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: var(--text);
+  }
+
+  .cadence-row {
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+  }
+  .cadence-row strong { color: var(--navy); }
+
+  /* Conversation steps */
+  .convo-steps { display: flex; flex-direction: column; gap: 0; }
+  .convo-step {
+    display: flex;
+    gap: 0;
+    position: relative;
+  }
+  .convo-step::before {
+    content: '';
+    position: absolute;
+    left: 19px;
+    top: 40px;
+    bottom: -1px;
+    width: 2px;
+    background: var(--border);
+  }
+  .convo-step:last-child::before { display: none; }
+
+  .step-dot {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--orange);
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-right: 16px;
+    margin-top: 2px;
+    z-index: 1;
+  }
+
+  .step-content {
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 12px;
+    flex: 1;
+  }
+  .step-content .step-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--navy);
+    margin-bottom: 6px;
+  }
+  .step-content .step-note {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+  .say-this {
+    background: #fff8f4;
+    border: 1px solid #f5d5c0;
+    border-left: 3px solid var(--orange);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 0.88rem;
+    line-height: 1.65;
+    color: var(--text);
+    font-style: italic;
+  }
+  .say-label {
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--orange);
+    margin-bottom: 6px;
+    font-style: normal;
+  }
+
+  /* Situation recap */
+  .situation-recap {
+    background: var(--blue-light);
+    border: 1px solid #c5d8f0;
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 28px;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    display: flex;
+    gap: 16px;
+  }
+  .recap-col { flex: 1; }
+  .recap-col .recap-label {
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--blue);
+    margin-bottom: 4px;
+  }
+
+  @media (max-width: 640px) {
+    .exp-grid { grid-template-columns: 1fr; }
+    .monitor-cards { grid-template-columns: 1fr; }
+    .field-row { grid-template-columns: 1fr; }
+    .output-top { padding: 20px; }
+    .plan-body { padding: 24px 16px; }
+    .input-card { padding: 24px; }
+  }
+
+  @media print {
+    body { background: white; }
+    .output-top { background: var(--navy) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .output-actions, .input-screen { display: none !important; }
+    .plan-body { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ INPUT SCREEN ══ -->
+<div class="input-screen" id="inputScreen">
+  <div class="logo-row">
+    <div class="logo-mark">📋</div>
+    <div class="logo-text">
+      <h1>Management Challenge Builder</h1>
+      <p>Turn your situation into a ready-to-use action plan</p>
+    </div>
+  </div>
+
+  <div class="input-card">
+    <h2>Describe your situation</h2>
+    <p>Enter the employee's name, the challenge you're facing, and what you want to achieve. The tool will build your complete expectation-setting plan — including exactly what to say.</p>
+
+    <div class="field field-row">
+      <div>
+        <label>Employee Name</label>
+        <input type="text" id="empName" placeholder="e.g. Alex Chen" />
+      </div>
+      <div>
+        <label>Their Role <span class="field-hint">optional</span></label>
+        <input type="text" id="empRole" placeholder="e.g. Project Manager" />
+      </div>
+    </div>
+
+    <div class="field">
+      <label>What is the challenge? <span class="field-hint">Be specific — describe what you've observed</span></label>
+      <textarea id="situation" placeholder="e.g. Alex has missed the last three project deadlines and hasn't flagged any of the delays in advance. When I follow up, the work isn't close to done. Other team members are waiting on Alex's pieces to move forward, which is creating bottlenecks across the team."></textarea>
+    </div>
+
+    <div class="field">
+      <label>What outcome do you want? <span class="field-hint">What does success look like?</span></label>
+      <textarea id="outcome" placeholder="e.g. I need Alex to hit deadlines consistently and to communicate proactively if something comes up that threatens the timeline — so the team can plan around it instead of being blocked." style="min-height: 80px;"></textarea>
+    </div>
+
+    <div class="loading-bar" id="loadingBar"><div class="loading-fill" id="loadingFill"></div></div>
+
+    <button class="generate-btn" id="generateBtn" onclick="buildPlan()">
+      <span id="btnText">✦ Build My Action Plan</span>
+    </button>
+  </div>
+</div>
+
+<!-- ══ OUTPUT SCREEN ══ -->
+<div class="output-screen" id="outputScreen">
+
+  <div class="output-top">
+    <div class="output-top-left">
+      <h2 id="planTitle">Action Plan</h2>
+      <p id="planSubtitle">Generated plan</p>
+    </div>
+    <div class="output-actions">
+      <button class="btn-outline-white" onclick="resetForm()">← Edit Situation</button>
+      <button class="btn-white" onclick="window.print()">🖨️ Print / Save PDF</button>
+    </div>
+  </div>
+
+  <div class="plan-body" id="planBody">
+    <!-- Generated dynamically -->
+  </div>
+
+</div>
+
+<script>
+
+function buildPlan() {
+  const name = document.getElementById('empName').value.trim();
+  const role = document.getElementById('empRole').value.trim();
+  const situation = document.getElementById('situation').value.trim();
+  const outcome = document.getElementById('outcome').value.trim();
+
+  if (!name || !situation || !outcome) {
+    alert('Please fill in the employee name, situation, and desired outcome.');
+    return;
+  }
+
+  // Loading animation
+  const btn = document.getElementById('generateBtn');
+  btn.disabled = true;
+  document.getElementById('btnText').textContent = 'Building your plan…';
+  const bar = document.getElementById('loadingBar');
+  const fill = document.getElementById('loadingFill');
+  bar.classList.add('active');
+  let w = 0;
+  const interval = setInterval(() => { w = Math.min(w + 15, 85); fill.style.width = w + '%'; }, 200);
+
+  setTimeout(() => {
+    clearInterval(interval);
+    fill.style.width = '100%';
+    setTimeout(() => {
+      // Generate and show
+      const plan = generate(name, role, situation, outcome);
+      renderPlan(plan, name, role, situation, outcome);
+      document.getElementById('inputScreen').style.display = 'none';
+      document.getElementById('outputScreen').classList.add('visible');
+      window.scrollTo(0, 0);
+      btn.disabled = false;
+      document.getElementById('btnText').textContent = '✦ Build My Action Plan';
+      bar.classList.remove('active');
+      fill.style.width = '0%';
+    }, 300);
+  }, 1200);
+}
+
+function resetForm() {
+  document.getElementById('inputScreen').style.display = 'block';
+  document.getElementById('outputScreen').classList.remove('visible');
+  window.scrollTo(0, 0);
+}
+
+// ══════════════════════════════════════════════
+//  GENERATION ENGINE
+// ══════════════════════════════════════════════
+
+function generate(name, role, situation, outcome) {
+  const s = situation.toLowerCase();
+  const o = outcome.toLowerCase();
+  const first = name.split(' ')[0];
+
+  // ── Detect core issue type(s) ──
+  const isDeadline    = /deadline|late|delay|behind|miss|on.time|timely|schedule|overdue/i.test(s);
+  const isComm        = /communicat|proactive|update|inform|report|flag|loop|heads.up|silence|silent|quiet|reach out/i.test(s);
+  const isQuality     = /quality|error|mistake|standard|inconsist|sloppy|wrong|inaccurat|rework|redo|fix/i.test(s);
+  const isOwnership   = /ownership|initiative|proact|accountab|self.start|wait|told|told what|direction|wait to be/i.test(s);
+  const isAttitude    = /attitude|tone|negativ|complain|pushback|resistant|difficult|conflict|interpersonal|team dynamic/i.test(s);
+  const isPriority    = /priorit|overwhelm|juggl|focus|scatter|too many|workload|capacity|stretched/i.test(s);
+  const isCollab      = /team|collaborat|silo|alone|others wait|others are wait|blocking|bottleneck/i.test(s);
+
+  // ── Extract specific details from situation text ──
+  // Pull out any numbers mentioned (days, times, instances)
+  const nums = situation.match(/\d+/g) || [];
+  const numStr = nums.length > 0 ? nums[0] : 'multiple';
+
+  // Look for quoted phrases or specific behaviors mentioned
+  const hasMissedX = situation.match(/(missed|missing)\s+([^.]+)/i);
+  const missedThing = hasMissedX ? hasMissedX[2].substring(0, 60) : null;
+
+  const hasWaiting = /wait/i.test(s);
+  const hasNoAdvanceNotice = /advance|ahead|warn|notice|in advance|proactive/i.test(o);
+
+  // ── Build WHAT ──
+  let whatDeliverable, whatMeasure;
+
+  if (isDeadline && isComm) {
+    whatDeliverable = `${first} delivers every project milestone by the agreed deadline, and gives at least 48 hours advance notice if anything threatens that timeline — before it becomes a problem for others.`;
+    whatMeasure = `Zero missed deadlines without prior notice. If a delay is unavoidable, ${first} flags it proactively with a revised plan, not after the fact.`;
+  } else if (isDeadline) {
+    whatDeliverable = `${first} consistently delivers work by the agreed deadline. ${missedThing ? `Specifically, the pattern of missing ${missedThing} needs to stop.` : `The current pattern of late delivery needs to change.`}`;
+    whatMeasure = `Every agreed deadline is met. If a deadline is truly unachievable, ${first} raises it at least 48 hours early — not on the due date or after.`;
+  } else if (isComm) {
+    whatDeliverable = `${first} proactively communicates progress, blockers, and risks without being asked — especially when something might affect the team's plans.`;
+    whatMeasure = `No one is ever surprised by a delay or gap because ${first} didn't say anything. Status is shared before someone has to follow up.`;
+  } else if (isQuality) {
+    whatDeliverable = `${first} delivers work that meets our quality standards the first time — reviewed before submission and free from the kinds of errors we've been seeing.`;
+    whatMeasure = `Stakeholders are not finding critical errors after handoff. ${first} does a self-review pass before any deliverable leaves their hands.`;
+  } else if (isOwnership) {
+    whatDeliverable = `${first} takes full ownership of their work — making decisions within their scope, moving forward without waiting to be told, and escalating only when genuinely stuck.`;
+    whatMeasure = `${first} advances their work independently. The number of times I need to prompt or redirect drops significantly.`;
+  } else if (isAttitude) {
+    whatDeliverable = `${first} engages constructively with the team, raising concerns through the right channels and supporting team decisions even when they disagree.`;
+    whatMeasure = `Peers and stakeholders experience ${first} as collaborative. No escalated interpersonal issues. Disagreements are handled professionally.`;
+  } else if (isPriority) {
+    whatDeliverable = `${first} manages their workload by clearly prioritizing highest-impact work first and raising capacity concerns early — before deliverables slip.`;
+    whatMeasure = `${first} and I are aligned on the top 3 priorities at any given time. Capacity issues are surfaced before they become delivery problems.`;
+  } else {
+    whatDeliverable = `${first} ${outcome.split('.')[0].toLowerCase()}.`;
+    whatMeasure = `We can both clearly see, week over week, that things are moving in the right direction based on the specific behaviors we agree on today.`;
+  }
+
+  // ── Build WHEN ──
+  let whenDeadline, whenMilestones;
+  const urgencyHigh = /immediately|urgent|right away|can't wait|serious|significant/i.test(s + o);
+
+  if (urgencyHigh) {
+    whenDeadline = `This needs to start now. I expect to see a clear shift in the next two weeks, and consistent performance from there.`;
+    whenMilestones = `This week: we have this conversation and ${first} confirms understanding. Next week: first check-in on progress. Week 4: I'll assess whether the pattern has genuinely changed.`;
+  } else {
+    whenDeadline = `I need to see meaningful improvement starting with the next opportunity — not someday. We'll do a formal check-in at 30 days to assess progress.`;
+    whenMilestones = `This week: alignment conversation. Weeks 2–4: I'll observe and give real-time feedback. Week 4: check-in. Week 8: we assess whether this is fully resolved or needs a more formal plan.`;
+  }
+
+  // ── Build HOW ──
+  let howProcess, howSupport;
+
+  if (isDeadline && isComm) {
+    howProcess = `Before any deadline, ${first} flags any risk as soon as it's visible — not the night before or after. If a timeline needs to shift, ${first} comes with a revised plan, not just a problem.`;
+    howSupport = `I'll be available for a quick check-in anytime ${first} hits a real blocker. But I need to hear about it early, not late.`;
+  } else if (isComm) {
+    howProcess = `${first} sends a brief weekly status update every [day] — one paragraph, what's on track, what's at risk, what needs a decision. For anything urgent, ${first} messages me directly rather than waiting for our 1:1.`;
+    howSupport = `I'll acknowledge every update same day so ${first} knows they're being heard. I'm not looking for perfection — I'm looking for transparency.`;
+  } else if (isQuality) {
+    howProcess = `Before submitting anything, ${first} runs through a personal checklist: Is this complete? Is it accurate? Would I be comfortable if a client saw this? If the answer to any of those is no, it's not ready.`;
+    howSupport = `If ${first} is unsure about quality standards on a specific piece of work, they ask me before submitting — not after.`;
+  } else if (isOwnership) {
+    howProcess = `${first} makes decisions within their role and moves forward. If they're genuinely stuck after trying to work through it, they come to me with what they've already tried and what they think the options are.`;
+    howSupport = `I'll step back and create space for ${first} to lead. I'll give feedback on decisions rather than making them for ${first}. That's my part of this.`;
+  } else {
+    howProcess = `${first} and I agree today on the specific behaviors that need to look different. ${first} owns the change — I'm here to support, not to manage the details.`;
+    howSupport = `I'll give real-time feedback when I see something worth noting — positive or developmental. I won't wait for the formal check-in.`;
+  }
+
+  // ── Build WHY ──
+  let whyTeam, whyPerson;
+
+  if (isCollab || hasWaiting) {
+    whyTeam = `When ${first}'s work is late or unclear, it doesn't just affect ${first} — it creates a ripple that slows the whole team down. People are waiting. That's not fair to them, and it's not sustainable.`;
+  } else if (isQuality) {
+    whyTeam = `The team's credibility with stakeholders depends on the quality of everything we put out. One careless error reflects on all of us.`;
+  } else {
+    whyTeam = `This directly affects our team's ability to deliver on what we've committed to. When this area is working well, it removes a significant stress point for everyone.`;
+  }
+
+  whyPerson = `I'm having this conversation because I see real potential in ${first} and I want to set them up to succeed. ${first} being known as someone who ${isDeadline ? 'delivers reliably' : isComm ? 'keeps people informed' : isQuality ? 'produces quality work' : isOwnership ? 'takes initiative' : 'shows up consistently'} — that's how careers grow here. I want that for ${first}.`;
+
+  // ── Build Final Statement ──
+  const finalStatement = `"${first}, I want to have a direct conversation with you about something important. ${whatDeliverable} ${whenDeadline} Here's what this needs to look like: ${howProcess} I want you to know why this matters to me — ${whyTeam} And personally — ${whyPerson} I'm not here to put you on a plan or make this bigger than it needs to be. I'm here because I believe you can do this, and I want to make sure we're completely aligned on what that looks like. Can we talk through this together?"`;
+
+  // ── Build Monitoring ──
+  let observe, document_, align;
+
+  if (isDeadline) {
+    observe = `Watch whether deadlines are met — and whether ${first} surfaces risks early or stays silent. Notice the lead time on any communication about delays.`;
+    document_ = `After each deadline or check-in, note: Was it on time? Was there advance notice if not? Log specific dates and outcomes in a simple running doc — not to build a case, but to see the pattern clearly.`;
+    align = `At each 1:1, reference specific examples: "Last week the X deadline — what happened there?" Connect what you observed directly back to today's expectation. Name it clearly when it's going well, too.`;
+  } else if (isComm) {
+    observe = `Notice whether updates arrive without you having to ask. Count how many times you follow up vs. how many times ${first} reaches out first. Pay attention to the substance and timing of communication.`;
+    document_ = `Log each week: Did I receive a proactive update? Did I have to follow up? For any significant situation, note what was communicated and when.`;
+    align = `At check-ins, be specific: "This week I had to follow up twice before getting an update — let's talk about what got in the way." Or: "You flagged the X risk on Monday and it helped me plan — that's exactly what I'm asking for."`;
+  } else if (isQuality) {
+    observe = `Review a sample of ${first}'s work before it goes out or after it's received. Note what's meeting standard and what isn't. Ask stakeholders for direct feedback.`;
+    document_ = `Keep a simple quality log: date, deliverable, status (met standard / didn't). Specific notes on what the issue was, not just that there was one.`;
+    align = `When you catch a quality issue, bring it to ${first} immediately with the specific example: "This happened — this is what I need instead." Don't accumulate feedback for the 1:1; address it in the moment when possible.`;
+  } else if (isOwnership) {
+    observe = `Track how often ${first} moves work forward independently vs. waits for direction. Notice when they come to you with solutions vs. problems only.`;
+    document_ = `After each interaction, note: Who initiated? What did ${first} do independently? What required your input? Look for the ratio shifting over time.`;
+    align = `At check-ins: "Walk me through what you moved forward this week without coming to me." Celebrate the wins. For the gaps, ask: "What would have needed to be true for you to handle that yourself?"`;
+  } else {
+    observe = `Watch for specific instances where the expectation is met or missed. Be concrete — what exactly did you see or not see?`;
+    document_ = `Keep brief notes after each relevant interaction. Date, situation, what happened, how it compared to the expectation. Review before each check-in.`;
+    align = `At each 1:1, connect what you observed to the expectation set today. Name exactly what you saw. Make the connection explicit so ${first} understands how they're tracking.`;
+  }
+
+  // ── Build Conversation Steps ──
+  const convSteps = [
+    {
+      title: 'Open with your intention',
+      note: 'Set the tone before you say anything else. This signals this is a supportive conversation, not a disciplinary one.',
+      say: `"${first}, I want to talk with you about something I've been observing. I'm having this conversation because I think you're capable of more, and I want us to be aligned so you can succeed here. Is now a good time?"`
+    },
+    {
+      title: "State what you've observed — specifically",
+      note: `Use the facts from the situation. No interpretations or judgments — just what you've seen. Let ${first} respond before moving forward.`,
+      say: `"Here's what I've been noticing: ${situation.split('.')[0]}. When that happens, ${isCollab || hasWaiting ? 'the team ends up waiting and can\'t move forward' : isQuality ? 'it creates rework and affects our credibility' : 'it creates a problem that\'s bigger than it needed to be'}. I wanted to name it directly rather than let it keep going."`
+    },
+    {
+      title: 'Pause and ask for their perspective',
+      note: `Before you share the expectation, hear ${first} out. This is important — it shows respect and often reveals information you didn't have.`,
+      say: `"Before I share what I need going forward — what's your read on this? What do you think has been happening?"`
+    },
+    {
+      title: 'State the expectation clearly',
+      note: `This is the core of the conversation. Be direct. Use the exact expectation you've built. Don't soften it to the point that it becomes unclear.`,
+      say: finalStatement
+    },
+    {
+      title: 'Check for understanding',
+      note: `Don't ask "does that make sense?" — ask them to reflect it back. You want to hear their understanding in their own words.`,
+      say: `"I want to make sure I was clear. Can you tell me what you heard — what am I asking for and why does it matter?"`
+    },
+    {
+      title: 'Invite them into the solution',
+      note: `Now ask what support they need. This creates shared ownership and often surfaces real obstacles you can actually help with.`,
+      say: `"What would make it easier for you to do this consistently? Are there obstacles on your end I should know about? What do you need from me?"`
+    },
+    {
+      title: 'Confirm next steps and close',
+      note: `End with clarity. Both of you should leave knowing exactly what was agreed and when you'll reconnect.`,
+      say: `"So here's what we're agreeing to: you'll [restate the core expectation]. I'll [your specific commitment]. And we'll check in on [date] to see how it's going. If anything comes up before then, come to me — don't wait. Sound good?"`
+    }
+  ];
+
+  return {
+    whatDeliverable, whatMeasure,
+    whenDeadline, whenMilestones,
+    howProcess, howSupport,
+    whyTeam, whyPerson,
+    finalStatement,
+    observe, document_, align,
+    convSteps
+  };
+}
+
+// ══════════════════════════════════════════════
+//  RENDERER
+// ══════════════════════════════════════════════
+
+function renderPlan(p, name, role, situation, outcome) {
+  const first = name.split(' ')[0];
+  const today = new Date().toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' });
+
+  document.getElementById('planTitle').textContent = `Action Plan — ${name}${role ? ', ' + role : ''}`;
+  document.getElementById('planSubtitle').textContent = `Generated ${today}`;
+
+  document.getElementById('planBody').innerHTML = `
+
+    <!-- Situation Recap -->
+    <div class="situation-recap">
+      <div class="recap-col">
+        <div class="recap-label">The Situation</div>
+        ${situation}
+      </div>
+      <div class="recap-col">
+        <div class="recap-label">Your Goal</div>
+        ${outcome}
+      </div>
+    </div>
+
+    <!-- ── SECTION 1: Expectation ── -->
+    <div class="plan-section section-expectation">
+      <div class="section-header">
+        <div class="section-icon">🎯</div>
+        <div>
+          <h3>The Expectation</h3>
+          <div class="section-sub">What you need, why it matters, and how success is measured</div>
+        </div>
+      </div>
+
+      <div class="exp-grid">
+        <div class="exp-cell">
+          <div class="tag">What you need</div>
+          <p>${p.whatDeliverable}</p>
+        </div>
+        <div class="exp-cell">
+          <div class="tag">How success is measured</div>
+          <p>${p.whatMeasure}</p>
+        </div>
+        <div class="exp-cell">
+          <div class="tag">The timeline</div>
+          <p>${p.whenDeadline}</p>
+          <p style="margin-top:6px; font-size:0.82rem; color:var(--muted)">${p.whenMilestones}</p>
+        </div>
+        <div class="exp-cell">
+          <div class="tag">Why it matters</div>
+          <p>${p.whyTeam}</p>
+        </div>
+      </div>
+
+      <div class="expectation-statement" style="margin-top:16px">
+        <div class="exp-label">Complete expectation statement — say this verbatim</div>
+        ${p.finalStatement}
+      </div>
+    </div>
+
+    <!-- ── SECTION 2: Monitoring ── -->
+    <div class="plan-section section-monitoring">
+      <div class="section-header">
+        <div class="section-icon">📊</div>
+        <div>
+          <h3>Monitoring Plan</h3>
+          <div class="section-sub">How you'll track progress between conversations</div>
+        </div>
+      </div>
+      <div class="monitor-cards">
+        <div class="monitor-card">
+          <div class="monitor-card-header">Observe</div>
+          <div class="monitor-card-body">${p.observe}</div>
+        </div>
+        <div class="monitor-card">
+          <div class="monitor-card-header doc">Document</div>
+          <div class="monitor-card-body">${p.document_}</div>
+        </div>
+        <div class="monitor-card">
+          <div class="monitor-card-header align">Align</div>
+          <div class="monitor-card-body">${p.align}</div>
+        </div>
+      </div>
+      <div class="cadence-row">
+        📅 <strong>Check-in cadence:</strong>&nbsp;Meet weekly for the first month, then bi-weekly once you see consistent improvement. Always reference this expectation explicitly — don't let check-ins become generic status updates.
+      </div>
+    </div>
+
+    <!-- ── SECTION 3: Conversation ── -->
+    <div class="plan-section section-conversation">
+      <div class="section-header">
+        <div class="section-icon">💬</div>
+        <div>
+          <h3>The 1:1 Conversation — Step by Step</h3>
+          <div class="section-sub">What to say and when to say it</div>
+        </div>
+      </div>
+      <div class="convo-steps">
+        ${p.convSteps.map((s, i) => `
+          <div class="convo-step">
+            <div class="step-dot">${i+1}</div>
+            <div class="step-content">
+              <div class="step-title">${s.title}</div>
+              <div class="step-note">${s.note}</div>
+              <div class="say-this">
+                <div class="say-label">Say this</div>
+                ${s.say}
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+  `;
+}
+
+</script>
+</body>
+</html>
